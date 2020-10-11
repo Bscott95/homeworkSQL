@@ -1,22 +1,3 @@
-// Build a command-line application that at a minimum allows the user to:
-
-//   * Add departments, roles, employees
-
-//   * View departments, roles, employees
-
-//   * Update employee roles
-
-// Bonus points if you're able to:
-
-//   * Update employee managers
-
-//   * View employees by manager
-
-//   * Delete departments, roles, and employees
-
-//   * View the total utilized budget of a department -- ie the combined salaries of all employees in that department
-
-
 
 // * Use [console.table](https://www.npmjs.com/package/console.table) to print MySQL rows to the console. There is a built-in version of `console.table`, but the NPM package formats the data a little better for our purposes.
 
@@ -36,7 +17,13 @@
 
 const inquirer = require("inquirer");
 const mysql = require("mysql");
-const { start } = require("repl");
+const { 
+			startPrompt,
+			addPrompt,
+			addDepPrompt 
+			} = require("./prompts")
+const { addDep } = require("./querries")
+
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
@@ -53,12 +40,9 @@ connection.connect((err) => {
 
 const runQuery = () => {
   inquirer
-    .prompt({
-      name: "search",
-      type: "list",
-      message: "Would you like to add, view, or update records?",
-      choices: ["Add records", "View records", "Update records"],
-    })
+    .prompt(
+      startPrompt
+    )
     .then((answer) => {
       switch (answer.search) {
         case "Add records":
@@ -77,12 +61,9 @@ const runQuery = () => {
 };
 const addRecords = () => {
   inquirer
-    .prompt({
-      name: "addTo",
-      type: "list",
-			message: "Would you like to add information to the departments, roles, or employees table?",
-			choices: ["Add departments", "Add roles", "Add employees"],
-    })
+    .prompt(
+			addPrompt
+		)
     .then((answer) => {
       switch (answer.addTo) {
         case "Add departments":
@@ -100,13 +81,11 @@ const addRecords = () => {
     });
 };
 const addDepartments = () => {
-	inquirer.prompt({
-		name: "dep_name",
-		type: "input",
-		message: "What is the name of the department you'd like to add?",
-	})
+	inquirer.prompt(
+		addDepPrompt,
+	)
 	.then((answer => {
-		connection.query('INSERT INTO emp_department SET ?;', answer, err => {
+		connection.query(addDep, answer, err => {
 			if (err) throw err;
 		});
 		console.log(`Added ${answer.dep_name} department to the database.`);
