@@ -1,4 +1,5 @@
 
+const { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } = require("constants");
 // * Use [console.table](https://www.npmjs.com/package/console.table) to print MySQL rows to the console. There is a built-in version of `console.table`, but the NPM package formats the data a little better for our purposes.
 
 // * You may wish to have a separate file containing functions for performing specific SQL queries you'll need to use. Could a constructor function or a class be helpful for organizing these?
@@ -18,11 +19,17 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql");
 const { 
-			startPrompt,
-			addPrompt,
-			addDepPrompt 
+				startPrompt,
+				addPrompt,
+				addDepPrompt,
+				addRolePrompt,
+				addEmpPrompt, 
 			} = require("./prompts")
-const { addDep } = require("./querries")
+const {     
+				insertDep,
+				insertRole,
+				insertEmpt, 
+			} = require("./querries")
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -70,10 +77,10 @@ const addRecords = () => {
 					addDepartments();
           break;
         case "Add roles":
-          addRole();
+          addRoles();
           break;
         case "Add employees":
-          addEmployee();
+          addEmployees();
           break;
         default:
           connection.end();
@@ -82,16 +89,45 @@ const addRecords = () => {
 };
 const addDepartments = () => {
 	inquirer.prompt(
-		addDepPrompt,
+		addDepPrompt
 	)
 	.then((answer => {
-		connection.query(addDep, answer, err => {
+		connection.query(insertDep, answer, err => {
 			if (err) throw err;
 		});
 		console.log(`Added ${answer.dep_name} department to the database.`);
 		runQuery();
 	})
 	)};
+const addRoles = () => {
+	inquirer.prompt(
+		addRolePrompt
+	)
+	// .then(({title, salary, department_id}) => {
+	.then((answer) => {
+		// connection.query(insertRole, {title, salary, department_id}, err => {
+			connection.query(insertRole, answer, err => {
+		if (err) throw err;
+		});
+		console.log(answer.title, answer.salary, answer.department_id)
+		// console.log(`Added role ${title} with a salary of ${salary} and department id of ${department_id} to the database.`);
+		runQuery();
+	})
+	};
+const addEmployees = () => {
+
+	
+	inquirer.prompt(
+		addEmpPrompt,
+	)
+	.then(({first_name, last_name}) => {
+		connection.query(insertEmpt, {first_name, last_name}, err => {
+			if (err) throw err;
+		});
+		console.log(`Added ${first_name} ${last_name} to the database.`);
+		runQuery();
+	})
+	};
 
 // Build a command-line application that at a minimum allows the user to:
 
