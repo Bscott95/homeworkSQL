@@ -23,10 +23,18 @@ const {
   addDepPrompt,
   addRolePrompt,
   addEmpPrompt,
-	viewPrompt,
-	updatePrompt,
+  viewPrompt,
+  updatePrompt,
 } = require("./prompts");
-const { insertDep, insertRole, insertEmpt, viewDep, viewRole, viewEmp } = require("./querries");
+const {
+  insertDep,
+  insertRole,
+  insertEmpt,
+  viewDep,
+  viewRole,
+	viewEmp,
+	updateEmp
+} = require("./querries");
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -101,75 +109,79 @@ const addRoles = () => {
     });
 };
 const addEmployees = () => {
-	connection.query(viewRole, (err, res) => {
-		if (err) throw err;
-		let rolesArr = [];
-		for (let i = 0; i < res.length; i++){
-			rolesArr.push(res[i])
-		}
-	addEmpPrompt.push({
-		name: 'role',
-		type: 'list',
-		message: "What is the employee's role?",
-		choices: function() {
-			return res.map(res => res.title);
-		}
-	})
-	inquirer.prompt(addEmpPrompt).then((res) => {
-		let first_name = res.first;
-		let last_name = res.last;
-		let role_id;
-		for (let i = 0; i < rolesArr.length; i++) {
-			if (res.role === rolesArr[i].title) {
-				role_id = rolesArr[i].id;
-			}
-		}
-		connection.query(viewEmp, (err, res) => {
-			if (err) throw err;
-			let employeeArr = [];
-			for (let i = 0; i < res.length; i++) {
-				employeeArr.push(res[i]);
-			}
-			inquirer.prompt({
-				name: 'manager',
-				type: 'list',
-				message: "Who is the employee's manager?",
-				choices: function() {
-					let arr = []
-					if (res.length > 0) {
-						for (let i = 0; i < employeeArr.length; i++) {
-							arr.push(`${employeeArr[i].first_name} ${employeeArr[i].last_name}`);
-						}
-					}
-					arr.push('No one');
-					return arr;
-				}
-			}).then(res => {
-				let manager_id;
-				for (let i = 0; i < employeeArr.length; i++) {
-					if (res.manager === `${employeeArr[i].first_name} ${employeeArr[i].last_name}`) {
-						manager_id = employeeArr[i].id;
-					}
-				}
-				connection.query(insertEmpt, {first_name, last_name, role_id, manager_id}, err => {
-					if (err) throw err;
-				});
-				console.log(`Added employee ${first_name} ${last_name} to the database.`);
-				runQuery();
-			});
-		});
-	})
-})
-}
-
-
-	// inquirer.prompt(addEmpPrompt).then(({ first_name, last_name }) => {
-  //   // NEED TO DEFINE role_id and manager id
-  //   // connection.query(insertEmpt, { first_name, last_name, role_id, manager id }, (err) => {
-  //   connection.query(insertEmpt, { first_name, last_name }, (err) => {
-  //     if (err) throw err;
-  //   });
-  //   console.log(`Added ${first_name} ${last_name} to the database.`);
+  connection.query(viewRole, (err, res) => {
+    if (err) throw err;
+    let rolesArr = [];
+    for (let i = 0; i < res.length; i++) {
+      rolesArr.push(res[i]);
+    }
+    addEmpPrompt.push({
+      name: "role",
+      type: "list",
+      message: "What is the employee's role?",
+      choices: function () {
+        return res.map((res) => res.title);
+      },
+    });
+    inquirer.prompt(addEmpPrompt).then((res) => {
+      let first_name = res.first;
+      let last_name = res.last;
+      let role_id;
+      for (let i = 0; i < rolesArr.length; i++) {
+        if (res.role === rolesArr[i].title) {
+          role_id = rolesArr[i].id;
+        }
+      }
+      connection.query(viewEmp, (err, res) => {
+        if (err) throw err;
+        let employeeArr = [];
+        for (let i = 0; i < res.length; i++) {
+          employeeArr.push(res[i]);
+        }
+        inquirer
+          .prompt({
+            name: "manager",
+            type: "list",
+            message: "Who is the employee's manager?",
+            choices: function () {
+              let arr = [];
+              if (res.length > 0) {
+                for (let i = 0; i < employeeArr.length; i++) {
+                  arr.push(
+                    `${employeeArr[i].first_name} ${employeeArr[i].last_name}`
+                  );
+                }
+              }
+              arr.push("No one");
+              return arr;
+            },
+          })
+          .then((res) => {
+            let manager_id;
+            for (let i = 0; i < employeeArr.length; i++) {
+              if (
+                res.manager ===
+                `${employeeArr[i].first_name} ${employeeArr[i].last_name}`
+              ) {
+                manager_id = employeeArr[i].id;
+              }
+            }
+            connection.query(
+              insertEmpt,
+              { first_name, last_name, role_id, manager_id },
+              (err) => {
+                if (err) throw err;
+              }
+            );
+            console.log(
+              `Added employee ${first_name} ${last_name} to the database.`
+            );
+            runQuery();
+          });
+      });
+    });
+  });
+};
 
 // =================VIEW====================
 const viewRecords = () => {
@@ -219,7 +231,8 @@ const updateRecords = () => {
         updateEmpRoles();
         break;
       case "update employee managers":
-        updateEmpManagers();
+				console.log("bonus function not written yet!")
+				runQuery();
         break;
       default:
         connection.end();
@@ -228,66 +241,77 @@ const updateRecords = () => {
 };
 
 const updateEmpRoles = () => {
-	connection.query(viewEmp, (err, res) => {
+  connection.query(viewEmp, (err, res) => {
     if (err) throw err;
     let empArr = [];
     for (let i = 0; i < res.length; i++) {
       empArr.push(res[i]);
-		}
-		console.log(empArr)
-    inquirer.prompt({
-      name: 'employee',
-      type: 'list',
-      message: "Which employee's role do you want to update?",
-      choices: function () {
-        let arr = []
-        if (res.length > 0) {
-          for (let i = 0; i < empArr.length; i++) {
-            arr.push(`${empArr[i].first_name} ${empArr[i].last_name}`);
-          }
-        }
-        return arr;
-      }
-    }).then(res => {
-      let id;
-      let first_name;
-      let last_name;
-      for (let i = 0; i < empArr.length; i++) {
-        if (res.employee === `${empArr[i].first_name} ${empArr[i].last_name}`) {
-          id = empArr[i].id;
-          first_name = empArr[i].first_name;
-          last_name = empArr[i].last_name;
-        }
-      }
-      connection.query(selectRoles, (err, res) => {
-        if (err) throw err;
-        let rolesArr = [];
-        for (let i = 0; i < res.length; i++) {
-          rolesArr.push(res[i]);
-        }
-        inquirer.prompt(
-          {
-            name: 'role',
-            type: 'list',
-            message: "What is the selected employee's updated role?",
-            choices: function () {
-              return res.map(res => res.title);
+    }
+    console.log(empArr);
+    inquirer
+      .prompt({
+        name: "employee",
+        type: "list",
+        message: "Which employee's role do you want to update?",
+        choices: function () {
+          let arr = [];
+          if (res.length > 0) {
+            for (let i = 0; i < empArr.length; i++) {
+              arr.push(`${empArr[i].first_name} ${empArr[i].last_name}`);
             }
           }
-        ).then((res) => {
-          let role_id;
-          for (let i = 0; i < rolesArr.length; i++) {
-            if (res.role === rolesArr[i].title) {
-              role_id = rolesArr[i].id;
-            }
+          return arr;
+        },
+      })
+      .then((res) => {
+        let id;
+        let first_name;
+        let last_name;
+        for (let i = 0; i < empArr.length; i++) {
+          if (
+            res.employee === `${empArr[i].first_name} ${empArr[i].last_name}`
+          ) {
+            id = empArr[i].id;
+            first_name = empArr[i].first_name;
+            last_name = empArr[i].last_name;
           }
-          connection.query(updateEmployees, [{role_id}, {id}], err => {
-            if (err) throw err;
-          })
-          console.log(`${first_name} ${last_name}'s role has been updated to "${res.role}".`);
-          start();
+        }
+        connection.query(viewRole, (err, res) => {
+          if (err) throw err;
+          let rolesArr = [];
+          for (let i = 0; i < res.length; i++) {
+            rolesArr.push(res[i]);
+          }
+          inquirer
+            .prompt({
+              name: "role",
+              type: "list",
+              message: "What is the selected employee's updated role?",
+              choices: function () {
+                return res.map((res) => res.title);
+              },
+            })
+            .then((res) => {
+              let role_id;
+              for (let i = 0; i < rolesArr.length; i++) {
+                if (res.role === rolesArr[i].title) {
+                  role_id = rolesArr[i].id;
+                }
+              }
+              connection.query(
+                updateEmp,
+                [{ role_id }, { id }],
+                (err) => {
+                  if (err) throw err;
+                }
+              );
+              console.log(
+                `${first_name} ${last_name}'s role has been updated to "${res.role}".`
+              );
+              runQuery();
+            });
         });
       });
-    });
   });
-}
+};
+

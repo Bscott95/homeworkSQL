@@ -6,6 +6,8 @@ const viewDep = 'SELECT * FROM emp_department;';
 const viewRole = 'SELECT * FROM emp_role;';
 const viewEmp = 'SELECT * FROM employee;';
 
+const updateEmp = 'UPDATE employee SET ? WHERE ?;';
+
 module.exports = {
     insertDep,
     insertRole,
@@ -13,4 +15,5 @@ module.exports = {
     viewDep,
     viewRole,
     viewEmp,
+    updateEmp
 }
